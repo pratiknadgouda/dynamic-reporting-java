@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.hls.reports.response.JwtResponse;
 import com.hls.reports.service.JWTService;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -67,5 +68,8 @@ public class JWTServiceImpl implements JWTService {
 		return Jwts.builder().claim("role", claims).setSubject(userName).claim("email", email)
 				.setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(new Date(System.currentTimeMillis() + expires_in))
 				.signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+	}
+	public String getEmail(String token) {
+		return extractAllClaims(token).get("email").toString();
 	}
 }
