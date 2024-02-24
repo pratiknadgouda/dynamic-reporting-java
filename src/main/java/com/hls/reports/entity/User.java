@@ -7,6 +7,8 @@ import java.util.Collections;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,34 +43,41 @@ public class User implements UserDetails{
 	@Column(name = "role_id")
 	private Integer role_id;
 	@Override
+	@JsonIgnore
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return Collections.emptyList();
 	}
 	@Override
+	@JsonIgnore
 	public String getPassword() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	@Override
+	@JsonIgnore
 	public String getUsername() {
 		// TODO Auto-generated method stub
 		return  this.emailId;
 	}
+	@JsonIgnore
 	@Override
 	public boolean isAccountNonExpired() {
 		// TODO Auto-generated method stub
 		return true;
 	}
+	@JsonIgnore
 	@Override
 	public boolean isAccountNonLocked() {
 		// TODO Auto-generated method stub
 		return true;
 	}
+	@JsonIgnore
 	@Override
 	public boolean isCredentialsNonExpired() {
 		// TODO Auto-generated method stub
 		return true;
 	}
+	@JsonIgnore
 	@Override
 	public boolean isEnabled() {
 		// TODO Auto-generated method stub

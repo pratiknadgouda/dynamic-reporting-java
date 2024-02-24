@@ -72,4 +72,7 @@ public class JWTServiceImpl implements JWTService {
 	public String getEmail(String token) {
 		return extractAllClaims(token).get("email").toString();
 	}
+	public String getRole(String token) {
+		return extractAllClaims(token).get("role").toString();
+	}
 }
