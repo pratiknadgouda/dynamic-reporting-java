@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
- 
+
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.aspectj.lang.annotation.RequiredTypes;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
- 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hls.reports.dto.ReportsDto;
 import com.hls.reports.entity.ReportDetail;
@@ -63,54 +63,60 @@ public class DocumentController {
 	@Autowired
 	private UserDetailsService userDetailsService;
 	@Autowired
-	private  UserRepository userRepository;
+	private UserRepository userRepository;
 	@Autowired
-	private  ReportDetailRepository reportDetailRepository;
+	private ReportDetailRepository reportDetailRepository;
 	@Autowired
-	private  ReportTemplateRepository reportTemplateRepository;
-		@PostMapping(value = "/generate-document")
-		public ResponseEntity<?> generateDocument(@RequestParam("templateId") Integer templateId,@RequestHeader("Authorization") String authHeader, @RequestBody(required = false) ReportsDto userList, @RequestParam Integer id)
-				throws ParserConfigurationException, IOException {
-			String token = authHeader.substring(7);
-			Context dataContext = null;
-			String email = jwtService.getEmail(token);
-			String finalHtml = null;
-			User user = userRepository.findById(id)
-			.orElseThrow(() -> new ReportException("User Not Found"));
-			ReportTemplate template = reportTemplateRepository.findById(templateId)
-			.orElseThrow(() -> new ReportException("Template Not Found"));
-			Optional<ReportDetail> reportEnitity = reportDetailRepository.findByUserAndReportTemplate(user,template);
-			reportEnitity.get().getReport();
-			ObjectMapper mapper = new ObjectMapper();
-	        ReportsDto dto = mapper.readValue(reportEnitity.get().getReport(), ReportsDto.class);
-			if(Objects.nonNull(userList)) {
-				dataContext = dataMapperService.setData(userList);
-			}
-			else {
-				
-	        dataContext = dataMapperService.setData(dto);
-			}
-			finalHtml = springTemplateEngine.process("reportTemplate1", dataContext);
-			String path = pdfConvertorService.htmlToPdfConvertor(finalHtml,template.getTemplateName());
-			File file= new File(path);		
-	        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-	        String headerValue = "attachment; filename=" +file.getName();   
-	        HttpHeaders headers = new HttpHeaders();
-	        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-	        headers.add("Pragma", "no-cache");
-	        headers.add("Expires", "0");
-	        headers.add("Content-Disposition", headerValue);
-	 
-			return ResponseEntity.ok()
-		            .headers(headers)
-		            .contentLength(file.length())
-		            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-		            .body(resource);
+	private ReportTemplateRepository reportTemplateRepository;
+
+	@PostMapping(value = "/generate-document")
+	public ResponseEntity<?> generateDocument(@RequestParam("templateId") Integer templateId,
+			@RequestHeader("Authorization") String authHeader, @RequestBody(required = false) ReportsDto userList,
+			@RequestParam(required = false) Integer id) throws ParserConfigurationException, IOException {
+		String token = authHeader.substring(7);
+		Context dataContext = null;
+		String email = jwtService.getEmail(token);
+		String finalHtml = null;
+		User user = null;
+		if (Objects.nonNull(id)) {
+			user = userRepository.findById(id).orElseThrow(() -> new ReportException("User Not Found"));
+		} else {
+
+			user = userRepository.findById(id).orElseThrow(() -> new ReportException("User Not Found"));
+		}
+
+		ReportTemplate template = reportTemplateRepository.findById(templateId)
+				.orElseThrow(() -> new ReportException("Template Not Found"));
+		ReportDetail reportEnitity = reportDetailRepository.findByUserAndReportTemplate(user, template)
+				.orElseThrow(() -> new ReportException("Template Not Found"));
+		
+		ObjectMapper mapper = new ObjectMapper();
+		ReportsDto dto = mapper.readValue(reportEnitity.getReport(), ReportsDto.class);
+		if (Objects.nonNull(userList)) {
+			dataContext = dataMapperService.setData(userList);
+		} else {
+
+			dataContext = dataMapperService.setData(dto);
+		}
+		finalHtml = springTemplateEngine.process("reportTemplate1", dataContext);
+		String path = pdfConvertorService.htmlToPdfConvertor(finalHtml, template.getTemplateName());
+		File file = new File(path);
+		InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+		String headerValue = "attachment; filename=" + file.getName();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+		headers.add("Pragma", "no-cache");
+		headers.add("Expires", "0");
+		headers.add("Content-Disposition", headerValue);
+
+		return ResponseEntity.ok().headers(headers).contentLength(file.length())
+				.contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
 	}
 
 	@PostMapping(value = "/save-report")
-	public ResponseEntity<String> saveJson(@RequestParam("templateId") Integer templateId, @RequestBody ReportsDto userList,
-			@RequestHeader("Authorization") String authHeader) throws ParserConfigurationException, IOException {
+	public ResponseEntity<String> saveJson(@RequestParam("templateId") Integer templateId,
+			@RequestBody ReportsDto userList, @RequestHeader("Authorization") String authHeader)
+			throws ParserConfigurationException, IOException {
 		String token = authHeader.substring(7);
 		String email = jwtService.getEmail(token);
 		userDetailsService.saveJsonInDb(userList, templateId, email);
