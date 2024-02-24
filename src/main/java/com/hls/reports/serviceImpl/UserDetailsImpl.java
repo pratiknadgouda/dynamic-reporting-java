@@ -16,11 +16,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hls.reports.dto.DoctorDto;
 import com.hls.reports.dto.PatientDto;
 import com.hls.reports.dto.ReportDto;
+import com.hls.reports.dto.ReportsDto;
 import com.hls.reports.entity.Doctor;
 import com.hls.reports.entity.Patient;
 import com.hls.reports.entity.ReportDetail;
 import com.hls.reports.entity.ReportTemplate;
 import com.hls.reports.entity.User;
+import com.hls.reports.exceptions.ReportException;
 import com.hls.reports.repository.DoctorRepository;
 import com.hls.reports.repository.PatientRepository;
 import com.hls.reports.repository.ReportDetailRepository;
@@ -61,9 +63,9 @@ public class UserDetailsImpl implements UserDetailsService {
 		Optional<User> user = userRepository.findByEmailIdIgnoreCase(email);
 		if (user.isPresent()) {
 			Patient patient = patientRepository.findByUser(user);
-			if(patient != null) {
-			PatientDto patientDto = new PatientDto(patient, patient.getDoctor());
-			return patientDto;
+			if (patient != null) {
+				PatientDto patientDto = new PatientDto(patient, patient.getDoctor());
+				return patientDto;
 			}
 		}
 		return null;
@@ -74,9 +76,9 @@ public class UserDetailsImpl implements UserDetailsService {
 	public ReportDto getUserReport(String email) {
 		Optional<User> user = userRepository.findByEmailIdIgnoreCase(email);
 		if (user.isPresent()) {
-		
+
 			ReportDetail reportDetail = reportDetailRepository.findByUser(user);
-			ReportDto reportDto = new ReportDto();	
+			ReportDto reportDto = new ReportDto();
 			reportDto.setJsonReport(reportDetail.getReport());
 			return reportDto;
 		}
@@ -89,4 +91,23 @@ public class UserDetailsImpl implements UserDetailsService {
 		return templates;
 	}
 
+	@Override
+	public void saveJsonInDb(ReportsDto report, Integer templateId, String email) {
+		ObjectMapper Obj = new ObjectMapper();
+		try {
+			String jsonReport = Obj.writeValueAsString(report);
+			ReportTemplate templateEntity = reportTemplateRepository.findById(templateId)
+					.orElseThrow(() -> new ReportException("Template Not Found"));
+			User userEntity = userRepository.findByEmailIdIgnoreCase(email)
+					.orElseThrow(() -> new ReportException("User Not Found"));
+			ReportDetail reportEntity = new ReportDetail();
+			reportEntity.setReport(jsonReport);
+			reportEntity.setUser(userEntity);
+			reportEntity.setReportTemplate(templateEntity);
+			reportDetailRepository.save(reportEntity);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

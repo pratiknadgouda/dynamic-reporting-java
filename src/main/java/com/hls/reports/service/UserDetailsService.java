@@ -5,6 +5,7 @@ import java.util.List;
 import com.hls.reports.dto.DoctorDto;
 import com.hls.reports.dto.PatientDto;
 import com.hls.reports.dto.ReportDto;
+import com.hls.reports.dto.ReportsDto;
 import com.hls.reports.entity.ReportTemplate;
 
 public interface UserDetailsService {
@@ -12,4 +13,5 @@ public interface UserDetailsService {
 	PatientDto getPatientDetails(String email);
 	ReportDto getUserReport(String email);
 	List<ReportTemplate> getAllTemplates();
+	void saveJsonInDb(ReportsDto report,Integer templateId,String email);
 }
