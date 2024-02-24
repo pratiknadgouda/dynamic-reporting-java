@@ -82,7 +82,7 @@ public class DocumentController {
 			user = userRepository.findById(id).orElseThrow(() -> new ReportException("User Not Found"));
 		} else {
 
-			user = userRepository.findById(id).orElseThrow(() -> new ReportException("User Not Found"));
+			user = userRepository.findByEmailIdIgnoreCase(email).orElseThrow(() -> new ReportException("User Not Found"));
 		}
 
 		ReportTemplate template = reportTemplateRepository.findById(templateId)
