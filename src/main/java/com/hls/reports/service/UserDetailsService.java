@@ -11,7 +11,7 @@ import com.hls.reports.entity.ReportTemplate;
 public interface UserDetailsService {
 	DoctorDto getDoctorDetails(String email);
 	PatientDto getPatientDetails(String email);
-	ReportDto getUserReport(String email);
+	ReportDto getUserReport(Integer id);
 	List<ReportTemplate> getAllTemplates();
 	void saveJsonInDb(ReportsDto report,Integer templateId,String email);
 }

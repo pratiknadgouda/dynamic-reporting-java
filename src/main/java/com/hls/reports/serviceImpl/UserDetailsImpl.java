@@ -73,8 +73,8 @@ public class UserDetailsImpl implements UserDetailsService {
 	}
 
 	@Override
-	public ReportDto getUserReport(String email) {
-		Optional<User> user = userRepository.findByEmailIdIgnoreCase(email);
+	public ReportDto getUserReport(Integer id) {
+		Optional<User> user = userRepository.findById(id);
 		if (user.isPresent()) {
 
 			ReportDetail reportDetail = reportDetailRepository.findByUser(user);

@@ -48,12 +48,11 @@ public class UserDetailsController {
 	}
 
 	@GetMapping("reportData/")
-	public ResponseEntity<?> getReportData(@RequestHeader("Authorization") String authHeader) {
+	public ResponseEntity<?> getReportData(@RequestHeader("Authorization") String authHeader, @RequestParam Integer id) {
 
-		String token = authHeader.substring(7);
-		String email = jwtService.getEmail(token);
+		
 
-		return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.of(userDetailsService.getUserReport(email)));
+		return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.of(userDetailsService.getUserReport(id)));
 
 	}
 

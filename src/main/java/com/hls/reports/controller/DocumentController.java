@@ -3,10 +3,12 @@ package com.hls.reports.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
  
 import javax.xml.parsers.ParserConfigurationException;
- 
+
+import org.aspectj.lang.annotation.RequiredTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.UrlResource;
@@ -37,9 +39,13 @@ import com.hls.reports.service.DataMapperService;
 import com.hls.reports.service.PDFConvertorService;
 import com.hls.reports.service.UserDetailsService;
 import com.hls.reports.serviceImpl.JWTServiceImpl;
- 
-import lombok.RequiredArgsConstructor;
+import com.hls.reports.serviceImpl.UserServiceImpl;
+import com.hls.reports.validation.RequestValidator;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/v1")
 @RequiredArgsConstructor
@@ -62,13 +68,14 @@ public class DocumentController {
 	private  ReportDetailRepository reportDetailRepository;
 	@Autowired
 	private  ReportTemplateRepository reportTemplateRepository;
-		@GetMapping(value = "/generate-document")
-		public ResponseEntity<?> generateDocument(@RequestParam("templateId") Integer templateId,@RequestHeader("Authorization") String authHeader)
+		@PostMapping(value = "/generate-document")
+		public ResponseEntity<?> generateDocument(@RequestParam("templateId") Integer templateId,@RequestHeader("Authorization") String authHeader, @RequestBody(required = false) ReportsDto userList, @RequestParam Integer id)
 				throws ParserConfigurationException, IOException {
 			String token = authHeader.substring(7);
+			Context dataContext = null;
 			String email = jwtService.getEmail(token);
 			String finalHtml = null;
-			User user = userRepository.findByEmailIdIgnoreCase(email)
+			User user = userRepository.findById(id)
 			.orElseThrow(() -> new ReportException("User Not Found"));
 			ReportTemplate template = reportTemplateRepository.findById(templateId)
 			.orElseThrow(() -> new ReportException("Template Not Found"));
@@ -76,7 +83,13 @@ public class DocumentController {
 			reportEnitity.get().getReport();
 			ObjectMapper mapper = new ObjectMapper();
 	        ReportsDto dto = mapper.readValue(reportEnitity.get().getReport(), ReportsDto.class);
-			Context dataContext = dataMapperService.setData(dto);
+			if(Objects.nonNull(userList)) {
+				dataContext = dataMapperService.setData(userList);
+			}
+			else {
+				
+	        dataContext = dataMapperService.setData(dto);
+			}
 			finalHtml = springTemplateEngine.process("reportTemplate1", dataContext);
 			String path = pdfConvertorService.htmlToPdfConvertor(finalHtml,template.getTemplateName());
 			File file= new File(path);		
